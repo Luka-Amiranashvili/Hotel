@@ -64,3 +64,7 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const logoutUser = (req, res) => {
+  res.status(200).json({ message: "Logged out successfully", token: null });
+};
