@@ -4,14 +4,26 @@ const createRoom = async (req, res) => {
   try {
     const { name, type, price, capacity, description } = req.body;
 
+    if (!req.file) {
+      return res.status(400).json({ message: "Room image is required" });
+    }
+
+    const imageUrl = `/uploads/rooms/${req.file.filename}`;
+
     const [result] = await db.query(
-      "INSERT INTO rooms (name, type, price, capacity, description) VALUES (?, ?, ?, ?, ?)",
-      [name, type, price, capacity, description]
+      "INSERT INTO rooms (name, type, price, capacity, description, image) VALUES (?, ?, ?, ?, ?, ?)",
+      [name, type, price, capacity, description, imageUrl]
     );
 
-    res
-      .status(201)
-      .json({ id: result.insertId, name, type, price, capacity, description });
+    res.status(201).json({
+      id: result.insertId,
+      name,
+      type,
+      price,
+      capacity,
+      description,
+      image: imageUrl,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
