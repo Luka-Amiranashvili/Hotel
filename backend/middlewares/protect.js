@@ -13,7 +13,7 @@ export const protect = async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       const [rows] = await db.query(
-        "SELECT id, name, email FROM users WHERE id = ?",
+        "SELECT id, name, email, is_admin FROM users WHERE id = ?",
         [decoded.id]
       );
       if (rows.length === 0)
