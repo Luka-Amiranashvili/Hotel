@@ -19,8 +19,8 @@ export const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const [result] = await db.query(
-      "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
-      [name, email, hashedPassword]
+      "INSERT INTO users (name, email, password, is_admin) VALUES (?, ?, ?, ?)",
+      [name, email, hashedPassword, 0]
     );
 
     const userId = result.insertId;
@@ -57,6 +57,7 @@ export const loginUser = async (req, res) => {
       _id: user.id,
       name: user.name,
       email: user.email,
+      is_admin: user.is_admin === 1,
       token: generateToken(user.id),
     });
   } catch (error) {

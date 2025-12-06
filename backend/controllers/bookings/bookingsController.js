@@ -41,10 +41,61 @@ const createBooking = async (req, res) => {
       guests,
       total_price,
     });
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-export { createBooking };
+const getAllBookings = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT b.*, r.name AS room_name 
+       FROM bookings b 
+       JOIN rooms r ON b.room_id = r.id
+       ORDER BY b.id DESC`
+    );
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const getBooking = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [rows] = await db.query(`SELECT * FROM bookings WHERE id = ?`, [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+    res.status(200).json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const deleteBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+
+    const [result] = await db.query(
+      `DELETE FROM bookings WHERE id = ? AND user_id = ?`,
+      [bookingId, req.user.id]
+    );
+
+    if (result.affectedRows === 0)
+      return res
+        .status(404)
+        .json({ message: "Booking not found or not yours" });
+
+    res.status(200).json({ message: "Booking deleted" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export { createBooking, getAllBookings, getBooking, deleteBooking };
