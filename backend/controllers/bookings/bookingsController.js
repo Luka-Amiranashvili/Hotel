@@ -28,8 +28,8 @@ const createBooking = async (req, res) => {
     const total_price = room.price * nights;
 
     const [result] = await db.query(
-      "INSERT INTO bookings (user_id, room_id, check_in, check_out, guests, total_price) VALUES (?, ?, ?, ?, ?, ?)",
-      [user_id, roomId, check_in, check_out, guests, total_price]
+      "INSERT INTO bookings (user_id, room_id, check_in, check_out, guests, total_price, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [user_id, roomId, check_in, check_out, guests, total_price, "pending"]
     );
 
     res.status(201).json({
@@ -40,6 +40,7 @@ const createBooking = async (req, res) => {
       check_out,
       guests,
       total_price,
+      status: "pending",
     });
   } catch (err) {
     console.error(err);
@@ -55,7 +56,20 @@ const getAllBookings = async (req, res) => {
        JOIN rooms r ON b.room_id = r.id
        ORDER BY b.id DESC`
     );
-    res.status(200).json(rows);
+
+    const now = new Date();
+    const updatedRows = rows.map((b) => {
+      let status = b.status;
+      const checkOut = new Date(b.check_out);
+
+      if (checkOut < now) status = "completed";
+      const checkIn = new Date(b.check_in);
+      if (checkIn > now) status = "upcoming";
+      if (checkIn <= now && checkOut >= now) status = "ongoing";
+      return { ...b, status };
+    });
+
+    res.status(200).json(updatedRows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -98,4 +112,30 @@ const deleteBooking = async (req, res) => {
   }
 };
 
-export { createBooking, getAllBookings, getBooking, deleteBooking };
+const cancelBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const user_id = req.user.id;
+
+    const [result] = await db.query(
+      "UPDATE bookings SET status='cancelled' WHERE id=? AND user_id=? AND status='upcoming'",
+      [bookingId, user_id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(400).json({ message: "Cannot cancel this booking" });
+    }
+    res.status(200).json({ message: "Booking cancelled" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export {
+  createBooking,
+  getAllBookings,
+  getBooking,
+  deleteBooking,
+  cancelBooking,
+};
