@@ -1,6 +1,7 @@
 import express from "express";
 import authRoutes from "./routes/authRoutes.js";
 import roomsRoutes from "./routes/roomsRoutes.js";
+import bookingsRoutes from "./routes/bookingsRoute.js";
 import { db } from "./db/db.js";
 
 const app = express();
@@ -10,6 +11,7 @@ app.use("/uploads", express.static("uploads"));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/rooms", roomsRoutes);
+app.use("/api/bookings", bookingsRoutes);
 
 const PORT = 3000;
 
