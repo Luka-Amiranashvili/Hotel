@@ -69,3 +69,15 @@ export const loginUser = async (req, res) => {
 export const logoutUser = (req, res) => {
   res.status(200).json({ message: "Logged out successfully", token: null });
 };
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const [users] = await db.query(
+      "SELECT id, name, email, role, is_admin FROM users ORDER BY id DESC"
+    );
+    res.status(200).json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
